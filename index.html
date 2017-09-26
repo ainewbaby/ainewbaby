@@ -341,126 +341,26 @@
       
         
           
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/25/Object Detection/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ainewbaby">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="AI Newbaby">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/09/25/Object Detection/" itemprop="url">未命名</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-25T21:31:14+08:00">
-                2017-09-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks"><a href="#R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks" class="headerlink" title="R-FCN: Object Detection via Region-based Fully Convolutional Networks"></a>R-FCN: Object Detection via Region-based Fully Convolutional Networks</h4><p>计算共享</p>
+            <h3 id="Rich-feature-hierarchies-for-accurate-object-detection-and-semantic-segmentation"><a href="#Rich-feature-hierarchies-for-accurate-object-detection-and-semantic-segmentation" class="headerlink" title="Rich feature hierarchies for accurate object detection and semantic segmentation"></a>Rich feature hierarchies for accurate object detection and semantic segmentation</h3><p>R-CNN两个关键点</p>
+<ol>
+<li>用CNN生成region proposals</li>
+<li>先在IMAGENET进行预训练，再在PASCAL上进行fine-tuning</li>
+</ol>
+<p>传统做法，如SIFT、HOG为梯度直方图，类似于视觉系统中的第一层V1。</p>
+<p>早期用于物体检测的CNN，为了保持较高的空间分辨率，通常只有两个卷积和池化层。</p>
+<p>作者本想使用扫窗（类似OverFeat做法），但经过五个卷积层后感受野很大（195x195），stride也很大（32x32）。</p>
+<p>因此决定采用“recognition using regions”的范式。</p>
+<p>R-CNN分三步：</p>
+<ol>
+<li>用selective search生成2000个类别无关的region proposals</li>
+<li>用CNN对每个region提固定长度的特征向量</li>
+<li>对每类分别用一个线性SVM进行二分类，对每一类用NMS拒绝那些IoU得分大于阈值的region</li>
+</ol>
+<p>region proposals IoU大于等于0.5的为正样本，否则为负样本。</p>
+<p>128 mini-batch = 32正样本 + 96背景（因为一张图像中正样本相对较少）</p>
+<p>看到了2.5</p>
+<hr>
+<h4 id="R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks"><a href="#R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks" class="headerlink" title="R-FCN: Object Detection via Region-based Fully Convolutional Networks"></a>R-FCN: Object Detection via Region-based Fully Convolutional Networks</h4><p>计算共享</p>
 <p>单帧170ms</p>
 <p>分类与检测的矛盾：</p>
 <ul>
@@ -731,7 +631,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

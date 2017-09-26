@@ -94,14 +94,17 @@
 
 
 
+<meta name="description" content="Rich feature hierarchies for accurate object detection and semantic segmentationR-CNN两个关键点  用CNN生成region proposals 先在IMAGENET进行预训练，再在PASCAL上进行fine-tuning  传统做法，如SIFT、HOG为梯度直方图，类似于视觉系统中的第一层V1。 早期用于物体检测">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Object Detection">
 <meta property="og:url" content="http://yoursite.com/2017/09/25/Object-Detection/index.html">
 <meta property="og:site_name" content="AI Newbaby">
+<meta property="og:description" content="Rich feature hierarchies for accurate object detection and semantic segmentationR-CNN两个关键点  用CNN生成region proposals 先在IMAGENET进行预训练，再在PASCAL上进行fine-tuning  传统做法，如SIFT、HOG为梯度直方图，类似于视觉系统中的第一层V1。 早期用于物体检测">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-09-25T13:32:29.022Z">
+<meta property="og:updated_time" content="2017-09-26T14:18:25.912Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Object Detection">
+<meta name="twitter:description" content="Rich feature hierarchies for accurate object detection and semantic segmentationR-CNN两个关键点  用CNN生成region proposals 先在IMAGENET进行预训练，再在PASCAL上进行fine-tuning  传统做法，如SIFT、HOG为梯度直方图，类似于视觉系统中的第一层V1。 早期用于物体检测">
 
 
 
@@ -336,7 +339,73 @@
       
 
       
-        
+        <h3 id="Rich-feature-hierarchies-for-accurate-object-detection-and-semantic-segmentation"><a href="#Rich-feature-hierarchies-for-accurate-object-detection-and-semantic-segmentation" class="headerlink" title="Rich feature hierarchies for accurate object detection and semantic segmentation"></a>Rich feature hierarchies for accurate object detection and semantic segmentation</h3><p>R-CNN两个关键点</p>
+<ol>
+<li>用CNN生成region proposals</li>
+<li>先在IMAGENET进行预训练，再在PASCAL上进行fine-tuning</li>
+</ol>
+<p>传统做法，如SIFT、HOG为梯度直方图，类似于视觉系统中的第一层V1。</p>
+<p>早期用于物体检测的CNN，为了保持较高的空间分辨率，通常只有两个卷积和池化层。</p>
+<p>作者本想使用扫窗（类似OverFeat做法），但经过五个卷积层后感受野很大（195x195），stride也很大（32x32）。</p>
+<p>因此决定采用“recognition using regions”的范式。</p>
+<p>R-CNN分三步：</p>
+<ol>
+<li>用selective search生成2000个类别无关的region proposals</li>
+<li>用CNN对每个region提固定长度的特征向量</li>
+<li>对每类分别用一个线性SVM进行二分类，对每一类用NMS拒绝那些IoU得分大于阈值的region</li>
+</ol>
+<p>region proposals IoU大于等于0.5的为正样本，否则为负样本。</p>
+<p>128 mini-batch = 32正样本 + 96背景（因为一张图像中正样本相对较少）</p>
+<p>看到了2.5</p>
+<hr>
+<h4 id="R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks"><a href="#R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks" class="headerlink" title="R-FCN: Object Detection via Region-based Fully Convolutional Networks"></a>R-FCN: Object Detection via Region-based Fully Convolutional Networks</h4><p>计算共享</p>
+<p>单帧170ms</p>
+<p>分类与检测的矛盾：</p>
+<ul>
+<li>分类：希望图像具备平移不变性，即无论图像中的物体如何变化都能被识别</li>
+<li>检测：希望图像具备平移可变性，即候选框随着图像中物体的平移而进行相应的调整</li>
+</ul>
+<p>网络越深，对图像的平移越不敏感。</p>
+<p>ResNet论文中为了解决这个矛盾，引入RoI pooling层，这种region-specific的操作破坏了平移不变性，使得后续的卷积层不再具备平移不变性。</p>
+<p>two-stage策略</p>
+<ol>
+<li>region proposal</li>
+<li>region classification</li>
+</ol>
+<p>骨架</p>
+<ul>
+<li>基于ResNet-101：100个卷积层+GAP+1个全连接层</li>
+<li>去除GAP和FC层</li>
+<li>ResNet101的最后一个卷积层是2048维，我们接上一个1024维的1x1卷积来降维</li>
+<li>最后，我们使用k^2*(C+1)通道数的卷积层来生成score maps</li>
+</ul>
+<p>训练</p>
+<ul>
+<li>损失函数分为两部分：分类损失（交叉熵）与bbox回归损失</li>
+<li>IoU大于等于0.5为正样本，小于0.5为负样本</li>
+<li>OHEM<ul>
+<li>假设每张图像有N个proposals，正向传播时需计算N个proposals的损失</li>
+<li>对这些RoIs按损失大小进行排序，选出B个损失最高的RoIs</li>
+<li>反向传播时只对选出的B个RoIs进行</li>
+</ul>
+</li>
+<li>默认使用single-scale进行训练，对图像进行resize（600 px）</li>
+</ul>
+<p>测试</p>
+<ul>
+<li>提完特征经过PRN生成300个RoIs</li>
+<li>后处理：非极大值抑制（0.3 IoU）</li>
+</ul>
+<p>ResNet101的stride由32变为16，增加了score map的分辨率，conv4以前的stride保持不变，conv5由2变为1，同时引入带孔卷积，保持相同的感受野。</p>
+<p>对比试验的部分结论</p>
+<ul>
+<li>生成的候选框数目太多也没用，300足以</li>
+<li>OHEM对于R-FCN没有占用太多时间</li>
+<li>多尺度训练{400， 500， 600， 700， 800}</li>
+<li>深度影响：50 &lt; 101 约等于152</li>
+<li>R-FCN对小物体检测更好</li>
+</ul>
+
       
     </div>
     
@@ -360,8 +429,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/09/25/Object Detection/" rel="next" title="">
-                <i class="fa fa-chevron-left"></i> 
+              <a href="/2017/09/24/0-ainewbaby/" rel="next" title="0. ainewbaby">
+                <i class="fa fa-chevron-left"></i> 0. ainewbaby
               </a>
             
           </div>
@@ -420,8 +489,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -436,7 +514,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -474,6 +552,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Rich-feature-hierarchies-for-accurate-object-detection-and-semantic-segmentation"><span class="nav-number">1.</span> <span class="nav-text">Rich feature hierarchies for accurate object detection and semantic segmentation</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#R-FCN-Object-Detection-via-Region-based-Fully-Convolutional-Networks"><span class="nav-number">1.1.</span> <span class="nav-text">R-FCN: Object Detection via Region-based Fully Convolutional Networks</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
